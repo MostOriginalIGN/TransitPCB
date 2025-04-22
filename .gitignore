@@ -1,0 +1,5 @@
+.DS_Store
+.env
+.env.local
+/supabase/.idea
+WiFiCredentials.h
