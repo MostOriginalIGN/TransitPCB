@@ -4,6 +4,11 @@
 #include <SPI.h>
 #include <FastLED.h>
 #include "WifiCredentials.h"
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <algorithm>
+#include <ctype.h>
+#include <string.h>
 
 const long gmtOffset_sec = -8 * 3600;
 const int daylightOffset_sec = 0;
@@ -36,6 +41,11 @@ const int daylightOffset_sec = 0;
 #include <map>
 #include <vector>
 
+struct StopRecord;
+struct Trip;
+extern const uint8_t lineLens[];
+extern CRGB *lineLeds[];
+
 enum Line
 {
   RED,
@@ -47,6 +57,8 @@ enum Line
   ACE,
   NUM_LINES
 };
+
+std::vector<uint8_t> getLineIndices(enum Line line);
 
 enum StationId
 {
@@ -379,8 +391,10 @@ bool fetchAndParse()
   }
 
   DynamicJsonDocument doc(16 * 1024);
-  DeserializationError err = deserializeJson(doc, http.getString());
+  auto payload = http.getString();
   http.end();
+
+  DeserializationError err = deserializeJson(doc, payload);
   if (err)
   {
     Serial.print("JSON parse error: ");
@@ -389,7 +403,8 @@ bool fetchAndParse()
   }
 
   std::map<String, Trip> grouped;
-  for (auto &el : doc.as<JsonArray>())
+  JsonArray arr = doc.as<JsonArray>();
+  for (JsonVariant el : arr)
   {
     StopRecord r;
     r.trip_id = el["trip_id"].as<String>();
@@ -397,17 +412,24 @@ bool fetchAndParse()
     r.station = stationIdFromExternalId(el["station_id"].as<const char *>());
     r.arrival = el["arrival_time"] ? parseISO(el["arrival_time"].as<const char *>()) : 0;
     r.departure = el["departure_time"] ? parseISO(el["departure_time"].as<const char *>()) : 0;
-    grouped[r.trip_id].trip_id = r.trip_id;
-    grouped[r.trip_id].line_id = r.line_id;
-    grouped[r.trip_id].stops.push_back(r);
+
+    auto &t = grouped[r.trip_id];
+    t.trip_id = r.trip_id;
+    t.line_id = r.line_id;
+    t.stops.push_back(r);
   }
 
   trips.clear();
-  for (auto &[_, t] : grouped)
+  for (auto &p : grouped)
   {
+    Trip &t = p.second;
     std::sort(t.stops.begin(), t.stops.end(),
-              [](auto &a, auto &b)
-              { return (a.departure ? a.departure : a.arrival) < (b.departure ? b.departure : b.arrival); });
+              [](const StopRecord &a, const StopRecord &b)
+              {
+                time_t ta = a.departure ? a.departure : a.arrival;
+                time_t tb = b.departure ? b.departure : b.arrival;
+                return ta < tb;
+              });
     trips.push_back(std::move(t));
   }
 
@@ -416,9 +438,10 @@ bool fetchAndParse()
 
 time_t parseISO(const char *s)
 {
-  struct tm tm;
+  struct tm tm = {};
   strptime(s, "%Y-%m-%dT%H:%M:%S", &tm);
-  return timegm(&tm);
+  tm.tm_isdst = -1;
+  return mktime(&tm);
 }
 
 Line lineFromString(const String &s)
@@ -503,20 +526,14 @@ void updateTrains()
   time_t now = time(nullptr);
 
   for (int L = 0; L < NUM_LINES; ++L)
-  {
     for (int i = 0; i < lineLens[L]; ++i)
-    {
       lineLeds[L][i] = CRGB::Black;
-    }
-  }
 
   for (int L = 0; L < NUM_LINES; ++L)
   {
     auto idxs = getLineIndices((Line)L);
     for (auto idx : idxs)
-    {
       lineLeds[L][idx] = CRGB::White;
-    }
   }
 
   for (auto &t : trips)
@@ -524,9 +541,7 @@ void updateTrains()
     Line L = lineFromString(t.line_id);
     int idx = computeTrainIndex(t, now);
     if (idx >= 0 && idx < lineLens[L])
-    {
       lineLeds[L][idx] = colorForLine(L);
-    }
   }
 
   FastLED.show();
