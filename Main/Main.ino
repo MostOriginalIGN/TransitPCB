@@ -137,6 +137,7 @@ enum StationId
   WALNUT_CREEK,
   WARM_SPRINGS_SOUTH_FREMONT,
   WEST_DUBLIN_PLEASANTON,
+  WEST_OAKLAND,
   NUM_STATIONS
 };
 
@@ -147,7 +148,9 @@ StationId stationIdFromExternalId(const std::string &rawId)
                  [](unsigned char c)
                  { return std::toupper(c); });
 
-  if (id == "73368" || id == "FRMT")
+  if (id == "73368"  
+   || id == "902901"  
+   || id == "902902") 
     return StationId::FREMONT;
   if (id == "73422")
     return StationId::GREAT_AMERICA;
@@ -162,101 +165,103 @@ StationId stationIdFromExternalId(const std::string &rawId)
   if (id == "73827")
     return StationId::VASCO_RD;
 
-  if (id == "12TH")
+  if (id == "900101" || id == "900102" || id == "900103")
     return StationId::ST_12TH_ST_OAKLAND_CITY_CENTER;
-  if (id == "16TH")
+  if (id == "901501" || id == "901502")
     return StationId::ST_16TH_ST_MISSION;
-  if (id == "19TH")
+  if (id == "900201" || id == "900202" || id == "900203")
     return StationId::ST_19TH_ST_OAKLAND;
-  if (id == "24TH")
+  if (id == "901601" || id == "901602")
     return StationId::ST_24TH_ST_MISSION;
-  if (id == "ANTC")
+  if (id == "908301" || id == "908302")
     return StationId::ANTIOCH;
-  if (id == "ASHB")
+  if (id == "904101" || id == "904102")
     return StationId::ASHBY;
-  if (id == "BALB")
+  if (id == "901801" || id == "901802")
     return StationId::BALBOA_PARK;
-  if (id == "BAYF")
+  if (id == "902501" || id == "902502")
     return StationId::BAY_FAIR;
-  if (id == "BERY")
+  if (id == "909501" || id == "909502")
     return StationId::BERRYESSA_NORTH_SAN_JOSE;
-  if (id == "CAST")
+  if (id == "905101" || id == "905102")
     return StationId::CASTRO_VALLEY;
-  if (id == "CIVC")
+  if (id == "901401" || id == "901402")
     return StationId::CIVIC_CENTER_UN_PLAZA;
-  if (id == "COLS")
+  if (id == "902301" || id == "902302")
     return StationId::COLISEUM;
-  if (id == "COLM")
+  if (id == "906101" || id == "906102")
     return StationId::COLMA;
-  if (id == "CONC")
+  if (id == "903601" || id == "903602")
     return StationId::CONCORD;
-  if (id == "DALY")
+  if (id == "901901" || id == "901902" || id == "901903")
     return StationId::DALY_CITY;
-  if (id == "DBRK")
+  if (id == "904201" || id == "904202")
     return StationId::DOWNTOWN_BERKELEY;
-  if (id == "DUBL")
+  if (id == "905301" || id == "905302")
     return StationId::DUBLIN_PLEASANTON;
-  if (id == "DELN")
+  if (id == "904501" || id == "904502")
     return StationId::EL_CERRITO_DEL_NORTE;
-  if (id == "PLZA")
+  if (id == "904401" || id == "904402")
     return StationId::EL_CERRITO_PLAZA;
-  if (id == "EMBR")
+  if (id == "901161" || id == "901162")
     return StationId::EMBARCADERO;
-  if (id == "FTVL")
+  if (id == "902201" || id == "902202")
     return StationId::FRUITVALE;
-  if (id == "GLEN")
+  if (id == "901701" || id == "901702")
     return StationId::GLEN_PARK;
-  if (id == "HAYW")
+  if (id == "902601" || id == "902602")
     return StationId::HAYWARD;
-  if (id == "LAFY")
+  if (id == "903301" || id == "903302")
     return StationId::LAFAYETTE;
-  if (id == "LAKE")
+  if (id == "902101" || id == "902102")
     return StationId::LAKE_MERRITT;
-  if (id == "MCAR")
+  if (id == "900301" || id == "900302" || id == "900303" || id == "900304")
     return StationId::MACARTHUR;
-  if (id == "MLBR")
+  if (id == "906403")
     return StationId::MILLBRAE;
-  if (id == "MLPT")
+  if (id == "909401" || id == "909402")
     return StationId::MILPITAS;
-  if (id == "MONT")
+  if (id == "901201" || id == "901202")
     return StationId::MONTGOMERY_ST;
-  if (id == "NBRK")
+  if (id == "904301" || id == "904302")
     return StationId::NORTH_BERKELEY;
-  if (id == "NCON")
+  if (id == "903701" || id == "903702")
     return StationId::NORTH_CONCORD_MARTINEZ;
-  if (id == "ORIN")
+  if (id == "903201" || id == "903202")
     return StationId::ORINDA;
-  if (id == "PITT")
+  if (id == "903801" || id == "903802")
     return StationId::PITTSBURG_BAY_POINT;
-  if (id == "PCTR")
+  if (id == "908201" || id == "908202")
     return StationId::PITTSBURG_CENTER;
-  if (id == "PHIL")
+  if (id == "903501" || id == "903502")
     return StationId::PLEASANT_HILL_CONTRA_COSTA_CENTRE;
-  if (id == "POWL")
+  if (id == "901301" || id == "901302")
     return StationId::POWELL_ST;
-  if (id == "RICH")
+  if (id == "904601" || id == "904602")
     return StationId::RICHMOND;
-  if (id == "ROCK")
+  if (id == "903101" || id == "903102")
     return StationId::ROCKRIDGE;
-  if (id == "SBRN")
+  if (id == "906301" || id == "906302")
     return StationId::SAN_BRUNO;
-  if (id == "SFIA")
+  if (id == "907101" || id == "907102" || id == "907103")
     return StationId::SAN_FRANCISCO_INTERNATIONAL_AIRPORT;
-  if (id == "SANL")
+  if (id == "902401" || id == "902402")
     return StationId::SAN_LEANDRO;
-  if (id == "SHAY")
+  if (id == "902701" || id == "902702")
     return StationId::SOUTH_HAYWARD;
-  if (id == "SSAN")
+  if (id == "906201" || id == "906202" || id == "70041" || id == "70042")
     return StationId::SOUTH_SAN_FRANCISCO;
-  if (id == "UCTY")
+  if (id == "902801" || id == "902802")
     return StationId::UNION_CITY;
-  if (id == "WCRK")
+  if (id == "903401" || id == "903402")
     return StationId::WALNUT_CREEK;
-  if (id == "WARM")
+  if (id == "909201" || id == "909202")
     return StationId::WARM_SPRINGS_SOUTH_FREMONT;
-  if (id == "WDUB")
+  if (id == "905201" || id == "905202")
     return StationId::WEST_DUBLIN_PLEASANTON;
-
+  if (id == "901101" || id == "901102")
+    return StationId::WEST_OAKLAND;
+  
   if (id == "70021" || id == "70022")
     return StationId::ST_22ND_STREET;
   if (id == "70031" || id == "70032")
@@ -312,49 +317,49 @@ const uint8_t stationIndexMap[NUM_LINES][NUM_STATIONS] = {
         255, 255, 255, 255, 255, 255, 19, 255, 255, 25, 255, 24, 4, 255, 1, 2,
         16, 255, 22, 255, 255, 255, 255, 255, 255, 6, 255, 29, 255, 17, 255, 3,
         255, 255, 255, 255, 255, 255, 18, 255, 0, 255, 255, 27, 255, 255, 28, 255,
-        255, 255, 255, 26, 255, 255, 255, 255, 255, 255, 255},
+        255, 255, 255, 26, 255, 255, 255, 255, 255, 255, 255, 9},
     // ORANGE
     {
         255, 255, 255, 8, 255, 255, 18, 255, 19, 255, 255, 255, 21, 255, 12, 255,
         255, 0, 255, 255, 255, 255, 255, 14, 255, 255, 255, 255, 22, 255, 25, 24,
         255, 15, 255, 11, 255, 255, 255, 16, 255, 20, 255, 255, 2, 255, 255, 23,
         255, 255, 255, 255, 255, 255, 255, 255, 26, 255, 255, 255, 255, 255, 255, 255,
-        13, 255, 10, 255, 255, 255, 255, 9, 255, 4, 255},
+        13, 255, 10, 255, 255, 255, 255, 9, 255, 4, 255, 255},
     // YELLOW
     {
         255, 255, 255, 255, 255, 255, 13, 25, 12, 255, 26, 0, 255, 28, 255, 255,
         255, 255, 255, 255, 255, 255, 24, 255, 255, 30, 5, 29, 255, 255, 255, 255,
         21, 255, 27, 255, 255, 255, 8, 255, 255, 11, 255, 255, 255, 22, 255, 255,
         4, 9, 255, 2, 1, 6, 23, 255, 255, 10, 255, 32, 255, 255, 33, 255,
-        255, 255, 255, 31, 255, 255, 255, 255, 7, 255, 255},
+        255, 255, 255, 31, 255, 255, 255, 255, 7, 255, 255, 14},
     // GREEN
     {
         255, 255, 255, 8, 255, 255, 255, 29, 255, 255, 30, 255, 255, 32, 12, 255,
         255, 0, 255, 255, 255, 255, 28, 14, 255, 255, 255, 33, 255, 255, 255, 255,
         25, 15, 31, 11, 255, 255, 255, 16, 255, 255, 255, 255, 2, 26, 255, 255,
         255, 255, 255, 255, 255, 255, 27, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        13, 255, 10, 255, 255, 255, 255, 9, 255, 4, 255},
+        13, 255, 10, 255, 255, 255, 255, 9, 255, 4, 255, 18},
     // BLUE
     {
         255, 255, 255, 255, 255, 255, 255, 23, 255, 255, 24, 255, 255, 26, 6, 255,
         255, 255, 255, 255, 255, 4, 22, 8, 255, 255, 255, 27, 255, 0, 255, 255,
         19, 9, 25, 255, 255, 255, 255, 10, 255, 255, 255, 255, 255, 20, 255, 255,
         255, 255, 255, 255, 255, 255, 21, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        7, 255, 255, 255, 255, 255, 255, 255, 255, 255, 2},
+        7, 255, 255, 255, 255, 255, 255, 255, 255, 255, 2, 12},
     // CALTRAIN
     {
         255, 255, 255, 255, 255, 24, 255, 255, 255, 1, 255, 255, 255, 255, 255, 3,
         13, 255, 8, 9, 19, 255, 255, 255, 25, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 11, 12, 255, 255, 23, 255, 16, 7, 255, 255, 21, 255,
         255, 255, 17, 255, 255, 255, 255, 15, 255, 255, 20, 6, 14, 0, 255, 26,
-        255, 10, 255, 5, 18, 22, 29, 255, 255, 255, 255},
+        255, 10, 255, 5, 18, 22, 29, 255, 255, 255, 255, 255},
     // ACE
     {
         3, 5, 8, 15, 23, 24, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 26,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
 };
 
 struct StopRecord
@@ -378,23 +383,32 @@ const unsigned long FETCH_INTERVAL_MS = 5 * 60 * 1000UL;
 unsigned long lastFetch = 0;
 std::vector<Trip> trips;
 
-bool fetchAndParse()
-{
+bool fetchAndParse() {
+  Serial.println("→ fetchAndParse()");
   HTTPClient http;
   http.begin(SUPABASE_FN);
   int code = http.GET();
-  if (code != HTTP_CODE_OK)
-  {
-    Serial.printf("HTTP error %d\n", code);
+  Serial.printf("  HTTP GET returned %d\n", code);
+  if (code != HTTP_CODE_OK) {
     http.end();
     return false;
   }
 
+  String payload = http.getString();
+  Serial.printf("  Payload length: %u chars\n", payload.length());
+  Serial.println(payload.substring(0, min(payload.length(), 200u)));
+
   DynamicJsonDocument doc(16 * 1024);
-  auto payload = http.getString();
+  auto err = deserializeJson(doc, payload);
+  if (err) {
+    Serial.print("  JSON parse error: ");
+    Serial.println(err.c_str());
+    http.end();
+    return false;
+  }
+  Serial.printf("  JSON parsed, array size=%u\n", doc.size());
   http.end();
 
-  DeserializationError err = deserializeJson(doc, payload);
   if (err)
   {
     Serial.print("JSON parse error: ");
@@ -404,8 +418,15 @@ bool fetchAndParse()
 
   std::map<String, Trip> grouped;
   JsonArray arr = doc.as<JsonArray>();
-  for (JsonVariant el : arr)
-  {
+  for (JsonVariant el : doc.as<JsonArray>()) {
+    const char* rawId = el["station_id"];
+    Serial.printf("    record: trip=%s station_id=%s\n",
+                  el["trip_id"].as<const char*>(),
+                  rawId);
+    StationId sid = stationIdFromExternalId(rawId);
+    if (sid == NUM_STATIONS) {
+      Serial.println("      ⚠️ unknown station_id!");
+    }
     StopRecord r;
     r.trip_id = el["trip_id"].as<String>();
     r.line_id = el["line_id"].as<String>();
@@ -444,23 +465,24 @@ time_t parseISO(const char *s)
   return mktime(&tm);
 }
 
-Line lineFromString(const String &s)
-{
-  if (s == "RED")
+Line lineFromString(const String &s) {
+    String u = s;
+    u.toUpperCase();
+    u.trim();
+
+    int cut = u.indexOf('-');
+    if (cut < 0) cut = u.indexOf(' ');
+    if (cut > 0) u = u.substring(0, cut);
+
+    if (u == "RED")       return RED;
+    if (u == "ORANGE")    return ORANGE;
+    if (u == "YELLOW")    return YELLOW;
+    if (u == "GREEN")     return GREEN;
+    if (u == "BLUE")      return BLUE;
+    if (u == "LOCAL" || u == "SOUTH" || u == "LIMITED" || u == "EXPRESS")  return CALTRAIN;
+    if (u == "ACETRAIN")       return ACE;
+
     return RED;
-  if (s == "ORANGE")
-    return ORANGE;
-  if (s == "YELLOW")
-    return YELLOW;
-  if (s == "GREEN")
-    return GREEN;
-  if (s == "BLUE")
-    return BLUE;
-  if (s == "CALTRAIN")
-    return CALTRAIN;
-  if (s == "ACE")
-    return ACE;
-  return RED;
 }
 
 CRGB colorForLine(Line L)
@@ -486,39 +508,113 @@ CRGB colorForLine(Line L)
   }
 }
 
-int computeTrainIndex(const Trip &t, time_t now)
-{
-  StopRecord const *prev = nullptr;
-  StopRecord const *next = nullptr;
+String formatTime(time_t t) {
+    struct tm tm;
+    localtime_r(&t, &tm);
 
-  for (auto &s : t.stops)
-  {
-    if (s.departure && s.departure <= now)
-    {
-      if (!prev || s.departure > prev->departure)
-        prev = &s;
-    }
-    if (s.arrival && s.arrival >= now)
-    {
-      if (!next || s.arrival < next->arrival)
-        next = &s;
-    }
-  }
-  if (!prev)
-  {
-    return getStationIndex(lineFromString(t.line_id), t.stops.front().station);
-  }
-  if (!next)
-  {
-    return getStationIndex(lineFromString(t.line_id), prev->station);
-  }
+    char buf[20];
+    snprintf(buf, sizeof(buf),
+             "%04d-%02d-%02d %02d:%02d:%02d",
+             tm.tm_year + 1900,
+             tm.tm_mon  + 1,
+             tm.tm_mday,
+             tm.tm_hour,
+             tm.tm_min,
+             tm.tm_sec);
+    return String(buf);
+}
 
-  uint8_t idx1 = getStationIndex(lineFromString(t.line_id), prev->station);
-  uint8_t idx2 = getStationIndex(lineFromString(t.line_id), next->station);
-  long dtTotal = next->arrival - prev->departure;
-  long dtNow = now - prev->departure;
-  float frac = constrain(float(dtNow) / float(dtTotal), 0, 1);
-  return idx1 + round(frac * (idx2 - idx1));
+int computeTrainIndex(const Trip& trip, time_t now) {
+    Serial.print(F("Trip ID: "));  Serial.println(trip.trip_id);
+    Serial.print(F("Now:    "));  Serial.println(formatTime(now));
+
+    Line  line     = lineFromString(trip.line_id);
+    int   maxIndex = lineLens[line] - 1;
+    Serial.print(F("Line length: ")); Serial.println(lineLens[line]);
+
+    struct Event {
+        time_t  t;
+        uint8_t idx;
+        bool    isArrival;
+        bool    isDeparture;
+    };
+    std::vector<Event> evts;
+    evts.reserve(trip.stops.size() * 2);
+
+    for (size_t i = 0; i < trip.stops.size(); ++i) {
+        const auto &s   = trip.stops[i];
+        uint8_t     idx = getStationIndex(line, s.station);
+        if (idx == 255) continue;
+
+        if (s.arrival   > 0) evts.push_back(Event{ s.arrival,   idx, true,  false });
+        if (s.departure > 0) evts.push_back(Event{ s.departure, idx, false, true  });
+    }
+    if (evts.empty()) {
+        Serial.println(F("→ no valid events; returning –1"));
+        return -1;
+    }
+
+    std::sort(evts.begin(), evts.end(),
+              [](const Event &a, const Event &b) {
+                  return a.t < b.t;
+              });
+    auto newEnd = std::unique(evts.begin(), evts.end(),
+        [](const Event &a, const Event &b) {
+            return a.t == b.t
+                && a.idx == b.idx
+                && a.isArrival == b.isArrival
+                && a.isDeparture == b.isDeparture;
+        });
+    evts.erase(newEnd, evts.end());
+
+    time_t  firstDepT = 0;
+    uint8_t firstDepIdx = 255;
+    for (size_t i = 0; i < evts.size(); ++i) {
+        if (evts[i].isDeparture) {
+            firstDepT   = evts[i].t;
+            firstDepIdx = evts[i].idx;
+            break;
+        }
+    }
+    if (firstDepT > 0 && now < firstDepT) {
+        Serial.print(F("Now before first departure ("));
+        Serial.print(formatTime(firstDepT));
+        Serial.print(F(") → clamp idx="));
+        Serial.println(firstDepIdx);
+        return firstDepIdx;
+    }
+
+    for (size_t i = 0; i + 1 < evts.size(); ++i) {
+        const Event &A = evts[i], &B = evts[i+1];
+        if (now >= A.t && now <= B.t) {
+            if (A.idx == B.idx && A.isArrival && B.isDeparture) {
+                Serial.print(F("Dwell at idx=")); Serial.println(A.idx);
+                return A.idx;
+            }
+            if (A.idx != B.idx && A.isDeparture && B.isArrival) {
+                double span = double(B.t - A.t);
+                double frac = double(now - A.t) / span;
+                int    pos  = A.idx + int(std::round(frac * (B.idx - A.idx)));
+                pos = constrain(pos, 0, maxIndex);
+
+                Serial.print(F("Travel "));
+                Serial.print(A.idx);
+                Serial.print(F("@")); Serial.print(formatTime(A.t));
+                Serial.print(F(" → "));
+                Serial.print(B.idx);
+                Serial.print(F("@")); Serial.println(formatTime(B.t));
+                Serial.print(F(" frac=")); Serial.println(frac, 3);
+                Serial.print(F("→ interp idx=")); Serial.println(pos);
+                return pos;
+            }
+            Serial.println(F("→ gap with no valid travel/dwell → –1"));
+            return -1;
+        }
+    }
+
+    const Event &last = evts.back();
+    Serial.print(F("Now after last event → clamp idx=")); Serial.println(last.idx);
+    return last.idx;
 }
 
 void updateTrains()
@@ -533,15 +629,18 @@ void updateTrains()
   {
     auto idxs = getLineIndices((Line)L);
     for (auto idx : idxs)
-      lineLeds[L][idx] = CRGB::White;
+      lineLeds[L][idx] = CRGB(50, 50, 50);
   }
 
-  for (auto &t : trips)
-  {
+  for (auto& t : trips) {
+    Serial.print(t.line_id);
     Line L = lineFromString(t.line_id);
+    Serial.println(L);
+
     int idx = computeTrainIndex(t, now);
-    if (idx >= 0 && idx < lineLens[L])
+    if (idx >= 0 && idx < lineLens[L]) {
       lineLeds[L][idx] = colorForLine(L);
+    }
   }
 
   FastLED.show();
@@ -729,19 +828,29 @@ void setup()
     multiWipe(strips, lens, colors, 7, WIPE, SPD);
   }
 
-  WiFi.begin(SSID, PASSWORD);
-  Serial.print("Wi‑Fi connecting");
-  while (WiFi.status() != WL_CONNECTED)
-  {
+    WiFi.begin(SSID, PASSWORD);
+  Serial.print("Wi-Fi connecting…");
+  unsigned long t0 = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    if (millis() - t0 > 10000) {
+      Serial.println("\nWi-Fi still not connected after 10s!");
+      break;
+    }
     showDashes();
     delay(500);
     Serial.print('.');
   }
-  Serial.println("\nWi‑Fi connected!");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWi-Fi connected! IP=" + WiFi.localIP().toString());
+  }
+
+  lastFetch = millis() - FETCH_INTERVAL_MS;
 
   configTzTime(
       "PST8PDT,M3.2.0/2,M11.1.0/2",
       "pool.ntp.org", "time.nist.gov");
+  
+  Serial.println("SNTP configured, waiting for time sync…");
 }
 
 void loop()
