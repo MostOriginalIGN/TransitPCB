@@ -32,16 +32,20 @@ Deno.serve(async () => {
           `and(departure_time.gte.${windowStart},departure_time.lte.${windowEnd})`
       )
 
-  if (error) {
-    console.error("Error fetching data:", error)
-    return new Response(
-        JSON.stringify({ error: "Failed to fetch data" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-    )
+  function makeJsonResponse(bodyObj: unknown, status = 200) {
+    const bodyStr = JSON.stringify(bodyObj)
+    const len     = new TextEncoder().encode(bodyStr).length
+    const headers = new Headers({
+      "Content-Type":   "application/json",
+      "Content-Length": len.toString(),
+    })
+    return new Response(bodyStr, { status, headers })
   }
 
-  return new Response(
-      JSON.stringify(data),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-  )
+  if (error) {
+    console.error("Error fetching data:", error)
+    return makeJsonResponse({ error: "Failed to fetch data" }, 500)
+  }
+
+  return makeJsonResponse(data, 200)
 })
