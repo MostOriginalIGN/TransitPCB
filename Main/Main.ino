@@ -5,6 +5,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "WifiCredentials.h"
+#include "WebServer.h"
 
 #include <algorithm>
 #include <cctype>
@@ -14,6 +15,7 @@
 #include <cstring>
 
 constexpr bool DEBUG = false;
+const char *hostname = "transit-map";
 
 #define DPRINT(...)                    \
     do                                 \
@@ -45,8 +47,13 @@ constexpr int DAYLIGHT_OFFSET_SEC = 0;
 constexpr unsigned long FETCH_INTERVAL_MS = 5 * 60 * 1000UL;
 constexpr unsigned long DISPLAY_UPDATE_INTERVAL_MS = 7UL;
 
-// Display brightness (0.0 – 1.0)
-constexpr float MAX_BRIGHTNESS = 0.05f;
+// Display brightness
+
+constexpr float BRIGHTNESS_LIMIT = 0.5f;
+
+constexpr float BRIGHTNESS_STEP = 0.05f;
+
+float brightness = 0.05f;
 
 // Pin assignments
 namespace PinConfig
@@ -62,6 +69,9 @@ namespace PinConfig
     constexpr int CALTRAIN = 10;
     constexpr int ACE = 17;
     constexpr int LEGEND = 18;
+    constexpr int PIN_H   = A0;
+    constexpr int PIN_M   = A1;
+    constexpr int PIN_SEL = A2;
 }
 
 // LED strip lengths
@@ -235,6 +245,18 @@ constexpr uint8_t SEG_L = 0x0E;
 
 const uint8_t segFailCodes[4] = {SEG_F, SEG_A, SEG_I, SEG_L};
 
+// Button Data
+
+constexpr int8_t FILTER_ALL = -1;
+
+// current filter / paging state
+int8_t  selectedLine   = FILTER_ALL;
+uint8_t stationPageIdx = 0;
+
+// debounce / edge-detect state
+bool lastH   = HIGH, lastM   = HIGH, lastSEL = HIGH;
+bool pressH  = false, pressM  = false, pressSEL = false;
+
 //=============================================================================
 //                            UTILITY FUNCTIONS
 //=============================================================================
@@ -335,7 +357,7 @@ CRGB colorForLine(Line L)
     case ACE:
         return CRGB::Purple;
     default:
-        return CRGB::White;
+        return CRGB(50, 50, 50);
     }
 }
 
@@ -611,6 +633,122 @@ std::vector<uint8_t> getLineIndices(Line L)
 }
 
 //=============================================================================
+//                         TEST ROUTINES
+//=============================================================================
+
+CRGB rgbColors[4] = {
+  CRGB::Red,
+  CRGB::Green,
+  CRGB::Blue,
+  CRGB::White
+};
+
+void testAllRGB() {
+  static uint8_t iter  = 0;
+
+  while (true) {
+    FastLED.clear();
+    for (int L = 0; L < NUM_LINES; ++L)
+      for (int i = 0; i < lineLen[L]; ++i)
+        lineLeds[L][i] = rgbColors[iter];
+    FastLED.show();
+    delay(500);
+    FastLED.clear(true);
+    delay(500);
+    iter++;
+    if(iter == 4){
+        iter = 0;
+    }
+  }
+}
+
+void testAllRed() {
+  while (true) {
+    FastLED.clear();
+    for (int L = 0; L < NUM_LINES; ++L)
+      for (int i = 0; i < lineLen[L]; ++i)
+        lineLeds[L][i] = CRGB::Red;
+    FastLED.show();
+    delay(500);
+    FastLED.clear(true);
+    delay(500);
+  }
+}
+
+void testAllGreen() {
+  while (true) {
+    FastLED.clear();
+    for (int L = 0; L < NUM_LINES; ++L)
+      for (int i = 0; i < lineLen[L]; ++i)
+        lineLeds[L][i] = CRGB::Green;
+    FastLED.show();
+    delay(500);
+    FastLED.clear(true);
+    delay(500);
+  }
+}
+
+void testCycleStrips() {
+  CRGB* strips[] = {
+    redLine, orangeLine, yellowLine,
+    greenLine, blueLine, calTrain, aceTrain
+  };
+  uint8_t lens[] = {
+    RED_LEN, ORANGE_LEN, YELLOW_LEN,
+    GREEN_LEN, BLUE_LEN, CAL_LEN, ACE_LEN
+  };
+  CRGB colors[] = {
+    CRGB::Red, CRGB(204,85,0), CRGB::Yellow,
+    CRGB::Green, CRGB::Blue, CRGB::Maroon, CRGB::Purple
+  };
+  while (true) {
+    for (int s = 0; s < NUM_LINES; ++s) {
+      FastLED.clear();
+      for (uint8_t i = 0; i < lens[s]; ++i)
+        strips[s][i] = colors[s];
+      FastLED.show();
+      delay(500);
+    }
+  }
+}
+
+void testStress() {
+  uint8_t hue = 0;
+  while (true) {
+    for (int L = 0; L < NUM_LINES; ++L) {
+      for (int i = 0; i < lineLen[L]; ++i) {
+        uint8_t pixelHue = hue + (i * 255 / lineLen[L]);
+        lineLeds[L][i] = CHSV(pixelHue, 255, 255);
+      }
+    }
+    FastLED.show();   
+    hue++; 
+  }
+}
+
+//=============================================================================
+//                         BUTTON POLLING
+//=============================================================================
+
+void pollButtons() {
+  bool h = digitalRead(PinConfig::PIN_H);
+  bool m = digitalRead(PinConfig::PIN_M);
+  bool s = digitalRead(PinConfig::PIN_SEL);
+
+  if (lastH == HIGH   && h == LOW)   pressH  = true;
+  if (lastM == HIGH   && m == LOW)   pressM  = true;
+  if (lastSEL == HIGH && s == LOW)   pressSEL = true;
+
+  lastH   = h;
+  lastM   = m;
+  lastSEL = s;
+}
+
+bool hPressed()   { if (pressH)  { pressH = false;  return true; } return false; }
+bool mPressed()   { if (pressM)  { pressM = false;  return true; } return false; }
+bool selPressed() { if (pressSEL){ pressSEL = false;return true;} return false; }
+
+//=============================================================================
 //                         DISPLAY & LED HELPERS
 //=============================================================================
 
@@ -664,24 +802,42 @@ void drawLineBases()
     }
 }
 
-void updateTrainsOnStrip()
-{
-    time_t now = time(nullptr);
+void updateTrainsOnStrip() {
+  time_t now = time(nullptr);
+  unsigned long nowM = millis();
 
-    clearAllLeds();
-    drawLineBases();
+  clearAllLeds();
+  drawLineBases();
+  drawLegendStrip();
 
-    for (const auto &trip : trips)
-    {
-        Line L = lineFromString(trip.lineId);
-        unsigned long nowMs = millis();
-        TrainPosition p = computeTrainPosition(trip, now);
-        if (p.valid && p.idx < lineLen[L])
-        {
-            lineLeds[L][p.idx] = dynamicLineColor(L, p, nowMs);
-        }
+  if (selectedLine == FILTER_ALL) {
+    for (const auto &trip : trips) {
+      Line L = lineFromString(trip.lineId);
+      TrainPosition p = computeTrainPosition(trip, now);
+      if (p.valid && p.idx < lineLen[L]) {
+        lineLeds[L][p.idx] = dynamicLineColor(L, p, nowM);
+      }
     }
-    FastLED.show();
+  } else {
+    Line L = Line(selectedLine);
+    for (const auto &trip : trips) {
+      if (lineFromString(trip.lineId) != L) continue;
+      TrainPosition p = computeTrainPosition(trip, now);
+      if (p.valid && p.idx < lineLen[L]) {
+        lineLeds[L][p.idx] = dynamicLineColor(L, p, nowM);
+      }
+    }
+
+    auto idxs = getLineIndices(L);
+    if (!idxs.empty()) {
+      uint8_t stripIdx = idxs[stationPageIdx];
+      if ((now % 2) == 0) {
+        lineLeds[L][stripIdx] = CRGB(50, 50, 50);
+      }
+    }
+  }
+
+  FastLED.show();
 }
 
 void multiWipe(CRGB *leds[], uint8_t lens[], const CRGB colors[], uint8_t count, uint8_t segmentLen, uint16_t delayMs)
@@ -708,6 +864,49 @@ void multiWipe(CRGB *leds[], uint8_t lens[], const CRGB colors[], uint8_t count,
     }
 }
 
+CRGB* cycleStrips[NUM_LINES] = {
+  redLine, orangeLine, yellowLine,
+  greenLine, blueLine, calTrain, aceTrain
+};
+
+uint8_t cycleLens[NUM_LINES] = {
+  RED_LEN, ORANGE_LEN, YELLOW_LEN,
+  GREEN_LEN, BLUE_LEN, CAL_LEN, ACE_LEN
+};
+
+CRGB cycleColors[NUM_LINES] = {
+  CRGB::Red,
+  CRGB(204,85,0),
+  CRGB::Yellow,
+  CRGB::Green,
+  CRGB::Blue,
+  CRGB::Maroon,
+  CRGB::Purple
+};
+
+void animateCycleStep() {
+  static uint8_t stripIdx   = 0;
+  static unsigned long last = 0;
+  if (millis() - last < 500) return;
+  last = millis();
+  FastLED.clear(true);
+  for (uint8_t i = 0; i < cycleLens[stripIdx]; ++i) {
+    cycleStrips[stripIdx][i] = cycleColors[stripIdx];
+  }
+  FastLED.show();
+  stripIdx = (stripIdx + 1) % NUM_LINES;
+}
+
+void drawLegendStrip() {
+    legend[0] = CRGB::Red;             
+    legend[1] = CRGB(204, 85, 0);       
+    legend[2] = CRGB::Yellow;          
+    legend[3] = CRGB::Green;            
+    legend[4] = CRGB::Blue;            
+    legend[5] = CRGB::Maroon;        
+    legend[6] = CRGB::Purple;        
+}
+
 //=============================================================================
 //                  FETCH + PARSE REMOTE TRAIN DATA
 //=============================================================================
@@ -731,13 +930,14 @@ bool fetchAndParse()
 
     DynamicJsonDocument doc(16 * 1024);
     auto err = deserializeJson(doc, http.getStream());
+    
+    http.end();
     if (err)
     {
         DPRINTF("  JSON parse error: %s\n", err.c_str());
         return false;
     }
     DPRINTF("  JSON parsed, array size=%u\n", doc.size());
-    http.end();
 
     std::map<String, Trip> grouped;
     for (JsonObject el : doc.as<JsonArray>())
@@ -899,6 +1099,119 @@ TrainPosition computeTrainPosition(const Trip &trip, time_t now)
 }
 
 //=============================================================================
+//                                  Web UI
+//=============================================================================
+
+// create the server object
+static WebServer server(80);
+
+// simple helper that turns your train data into JSON:
+static String buildStatusJson()
+{
+    StaticJsonDocument<2048> doc;
+    JsonArray arr = doc.createNestedArray("trains");
+
+    time_t now = time(nullptr);
+    for (auto &t : trips)
+    {
+        auto pos = computeTrainPosition(t, now);
+        JsonObject o = arr.createNestedObject();
+        o["tripId"] = t.tripId;
+        o["line"] = t.lineId;
+        o["idx"] = pos.idx;
+        o["isTraveling"] = pos.isTraveling;
+        o["fromIdx"] = pos.fromIdx;
+        o["toIdx"] = pos.toIdx;
+    }
+
+    String s;
+    serializeJson(doc, s);
+    return s;
+}
+
+// HTTP handler for “/status”
+static void onStatus()
+{
+    String json = buildStatusJson();
+    server.send(200, "application/json", json);
+}
+
+// HTTP handler for “/” serves a minimal HTML+JS to poll /status every second
+static void onRoot()
+{
+    const char *page = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Transit Map</title>
+    <style>
+        #svgContainer svg {
+            width: 100%;
+            max-width: 90vw;
+            max-height: 90vh;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="svgContainer"></div>
+    <script src="https://gist.githack.com/MostOriginalIGN/9e108d50700c377a8a7282d805c6d780/raw/dfbca66a4f879a94dcb241e88790e2aa1fbd969b/leds.js"></script>
+</body>
+
+</html>
+)rawliteral";
+    server.send(200, "text/html", page);
+}
+
+void onLeds()
+{
+    StaticJsonDocument<8192> doc;
+    JsonArray arr = doc.createNestedArray("leds");
+
+    for (int L = 0; L < NUM_LINES; L++)
+    {
+        CRGB *strip = lineLeds[L];
+        uint8_t len = lineLen[L];
+        for (uint8_t i = 0; i < len; i++)
+        {
+            CRGB &led = strip[i];
+            char hexcol[8];
+            snprintf(hexcol, sizeof(hexcol),
+                     "#%02X%02X%02X",
+                     led.r, led.g, led.b);
+
+            JsonObject o = arr.createNestedObject();
+            o["line"] = L;
+            o["idx"] = i;
+            o["on"] = (led.r || led.g || led.b) ? true : false;
+            o["color"] = hexcol;
+        }
+    }
+
+    String out;
+    serializeJson(doc, out);
+    server.send(200, "application/json", out);
+}
+
+void initWebUI()
+{
+    server.on("/", HTTP_GET, onRoot);
+    server.on("/status", HTTP_GET, onStatus);
+    server.on("/leds", HTTP_GET, onLeds);
+    server.begin();
+}
+
+void handleWebUI()
+{
+    server.handleClient();
+}
+
+//=============================================================================
 //                                SETUP / LOOP
 //=============================================================================
 
@@ -926,36 +1239,30 @@ void initFastLED()
     FastLED.addLeds<WS2812B, PinConfig::ACE, GRB>(aceTrain, ACE_LEN);
     FastLED.addLeds<WS2812B, PinConfig::LEGEND, GRB>(legend, LEGEND_LEN);
     FastLED.clear(true);
-    FastLED.setBrightness(uint8_t(MAX_BRIGHTNESS * 255));
+    FastLED.setBrightness(uint8_t(brightness * 255));
 
-    legend[0] = CRGB::Red;
-    legend[1] = CRGB(204, 85, 0);
-    legend[2] = CRGB::Green;
-    legend[3] = CRGB::Blue;
-    legend[4] = CRGB::Yellow;
-    legend[5] = CRGB::Maroon;
-    legend[6] = CRGB::Purple;
+    drawLegendStrip();
     FastLED.show();
 }
 
 void initWiFi()
 {
+    WiFi.setHostname(hostname);
     WiFi.begin(SSID, PASSWORD);
     unsigned long start = millis();
     DPRINT("WiFi connecting…");
     while (WiFi.status() != WL_CONNECTED && millis() - start < 10000)
     {
         showDashes();
-        delay(500);
-        DPRINT('.');
+        animateCycleStep();
     }
     if (WiFi.status() == WL_CONNECTED)
     {
-        DPRINTLN("\nWiFi connected. IP=" + WiFi.localIP().toString());
+        Serial.println("\nWiFi connected. IP=" + WiFi.localIP().toString());
     }
     else
     {
-        DPRINTLN("\nWiFi failed to connect in 10s.");
+        Serial.println("\nWiFi failed to connect in 10s.");
     }
 }
 
@@ -978,18 +1285,71 @@ void sweep()
 void setup()
 {
     Serial.begin(115200);
+    pinMode(PinConfig::PIN_H, INPUT_PULLUP);
+    pinMode(PinConfig::PIN_M, INPUT_PULLUP);
+    pinMode(PinConfig::PIN_SEL, INPUT_PULLUP);
     delay(100);
+
+    bool hHeld   = digitalRead(PinConfig::PIN_H)   == LOW;
+    bool mHeld   = digitalRead(PinConfig::PIN_M)   == LOW;
+    bool selHeld = digitalRead(PinConfig::PIN_SEL) == LOW;
+
+
     initMax7219();
     initFastLED();
-    sweep();
+
+    if (hHeld && mHeld && selHeld) testStress();
+    if (hHeld && mHeld)   testAllRGB();
+    if (hHeld)   testAllRed();
+    if (mHeld)   testAllGreen();
+    if (selHeld) testCycleStrips();
+    
     initWiFi();
     initTime();
+
+    sweep();
+
+    // initWebUI();
+    
     lastFetchMs = millis() - FETCH_INTERVAL_MS;
 }
 
 void loop()
 {
     unsigned long nowMs = millis();
+
+    pollButtons();
+
+    if (hPressed()) {
+        brightness = min(BRIGHTNESS_LIMIT, brightness + BRIGHTNESS_STEP);
+        FastLED.setBrightness(uint8_t(brightness * 255));
+    }
+
+    if (mPressed()) {
+        brightness = max(0.0f, brightness - BRIGHTNESS_STEP);
+        FastLED.setBrightness(uint8_t(brightness * 255));
+    }
+
+    if (selPressed()) {
+        selectedLine++;
+        if (selectedLine >= NUM_LINES) {
+        selectedLine = FILTER_ALL;
+        }
+        stationPageIdx = 0;
+    }
+
+    if (selectedLine >= 0) {
+        auto idxs = getLineIndices(Line(selectedLine));
+        size_t N = idxs.size();
+        if (N) {
+        if (hPressed()) {
+            stationPageIdx = (stationPageIdx + 1) % N;
+        }
+        if (mPressed()) {
+            stationPageIdx = (stationPageIdx + N - 1) % N;
+        }
+        }
+    }
 
     // 7-segment time display
     if (nowMs - lastDispMs >= DISPLAY_UPDATE_INTERVAL_MS)
@@ -1004,32 +1364,28 @@ void loop()
     }
 
     // remote fetch
-    if (nowMs - lastFetchMs >= FETCH_INTERVAL_MS)
-    {
+    if (nowMs - lastFetchMs >= FETCH_INTERVAL_MS) {
         lastFetchMs = nowMs;
         bool success = false;
 
-        for (int attempt = 0; attempt <= 3; ++attempt)
-        {
-            if (attempt > 0)
-            {
-                delay(5000);
+        for (int attempt = 0; attempt <= 3; ++attempt) {
+            if (attempt > 0) {
+                unsigned long backoffStart = millis();
+                while (millis() - backoffStart < 5000) {
+                    animateCycleStep();
+                }
             }
-            if (fetchAndParse())
-            {
+            if (fetchAndParse()) {
                 DPRINTLN("Train data updated");
                 success = true;
                 break;
-            }
-            else
-            {
+                } else {
                 DPRINT("Fetch failed, attempt ");
                 DPRINTLN(attempt + 1);
             }
         }
 
-        if (!success)
-        {
+        if (!success) {
             DPRINTLN("All fetch attempts failed");
         }
     }
@@ -1040,4 +1396,6 @@ void loop()
         lastDrawMs = nowMs;
         updateTrainsOnStrip();
     }
+
+    // handleWebUI();
 }
